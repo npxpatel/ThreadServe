@@ -41,6 +41,8 @@ pthread_mutex_t lock;
 struct cache_element *head;
 int cache_size;
 
+
+
 int main(int argc, char *argv[]){
     int client_socketId, client_len;
     struct sockaddr_in server_addr, client_addr;
@@ -71,7 +73,7 @@ int main(int argc, char *argv[]){
     bzero((char *)&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port_number);
-    server_addr.sin_addr.s_addr = INADDR_ANY;    // target server for now as any
+    server_addr.sin_addr.s_addr = INADDR_ANY;    // target server addr for now as any, 
 
 
     if(bind(proxy_socketId, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
@@ -79,5 +81,44 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
+    printf("Binding on port %d\n", port_number);
+
+    int listen_status = listen(proxy_socketId, MAX_CLIENTS);
+    if(listen_status < 0){
+        perror("Error in listening");
+        exit(1);
+    }
+
+    int connected_socketId[MAX_CLIENTS];
+    int i = 0;
+    
+    while(1){
+        bzero((char *)&client_addr, sizeof(client_addr));
+        client_len = sizeof(client_addr);
+        client_socketId = accept(proxy_socketId, (struct sockaddr *)&client_addr, (socklen_t)&client_len);
+
+        /* accept() is responsible for accepting
+         incoming client connections and creating a new socket (clientSocket) for communication */
+
+        if(client_socketId < 0){
+            perror("Not able to connect");
+            exit(1);
+        }
+
+        connected_socketId[i] = client_socketId;
+        
+        struct sockaddr_in *client_ptr = &client_addr;
+        struct in_addr ip_addr = client_ptr->sin_addr;
+        char str[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &ip_addr, str, INET_ADDRSTRLEN);
+
+        printf("Client connected at port %d with ip address: %s\n", ntohs(client_addr.sin_port), str);
+
+        pthread_create(&tid[i], NULL, thread_func, &connected_socketId[i]);
+        i ++;
+             
+    }
+    close(proxy_socketId);
+    return 0;
 }
 
