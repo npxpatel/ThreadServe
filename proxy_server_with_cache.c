@@ -18,6 +18,7 @@
 
 #define MAX_CLIENTS 5
 #define MAX_BYTES (1 << 20)    // 1 MB 
+#define MAX_CACHE_SIZE (10 * 1024 * 1024)  // 10 MB
 
 struct cache_element{
     char *data;
@@ -27,6 +28,7 @@ struct cache_element{
     struct cache_element *next;
 };
 
+typedef struct cache_element cache_element;
 // ( will group all to together in doubly link-list )
 struct cache_element *find(char *url);
 int add_cache_element(char *data, char *url, int len);
@@ -40,7 +42,79 @@ sem_t semaphore;
 pthread_mutex_t lock;
 
 struct cache_element *head;
-int cache_size;
+int cache_size = 0;
+
+
+cache_element *find(char *url){
+    cache_element *site = NULL;
+    int lock_value = pthread_mutex_lock(&lock);
+    printf("Lock accquired value is %d\n", lock_value);
+         /* although it will prohibit another thread to even read also, we can use (Read-Write Locks ) */
+
+    site = head;
+       while(site){
+           if(strcmp(site->url, url) == 0){
+                printf("LRU Time track before access %d\n Url found!\n", site->lru_time);
+                site->lru_time = time(NULL);
+                printf("LRU Time track after access %d\n", site->lru_time);
+                pthread_mutex_unlock(&lock);
+                printf("Unlocked\n");
+             
+                return site;
+          }
+          else{
+                site = site->next;
+              }
+        }         
+    pthread_mutex_unlock(&lock);
+    printf("Unlocked\n");
+    return NULL;
+}
+
+int add_cache_element(char *data, char *url, int len){
+    int lock_value = pthread_mutex_lock(&lock);
+    printf("Lock accquired value is %d\n", lock_value);
+    
+    while(cache_size + len > MAX_CACHE_SIZE){
+        remove_cache_element();
+    }
+    
+    int element_size = len + strlen(url) + sizeof(cache_element) + len;
+    cache_element *new_element = (cache_element *)malloc(sizeof(cache_element));
+    new_element->data = (char *)malloc(len + 1);
+    strcpy(new_element->data, data);
+    new_element->url = (char *)malloc(strlen(url) * sizeof(char));
+    strcpy(new_element->url, url);
+    new_element->lru_time = time(NULL);
+
+    new_element->next = head;
+    head = new_element;
+    cache_size += element_size;
+    
+    lock_value = pthread_mutex_unlock(&lock);
+    printf("Unlocked");
+
+    return 1;
+}
+
+void 
+
+int checkHTTPversion(char *msg)
+{
+	int version = -1;
+	if(strncmp(msg, "HTTP/1.1", 8) == 0)
+	{
+		version = 1;
+	}
+	else if(strncmp(msg, "HTTP/1.0", 8) == 0)			
+	{
+		version = 1;										
+	}
+	else
+		version = -1;
+
+	return version;
+}
 
 int connectRemoteServer(char *host_addr, int port){
     int remoteSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -194,11 +268,17 @@ void *thread_func(void *NewSocket){
                if(request->host && request->path && checkHTTPversion(request->version) == 1){
                   bytes_client_sends = handle_request(socket, request, tempReq);
                   if(bytes_client_sends == -1){
-                     sendErrMsg(socket, 500);
+                     char str[1024];
+                     str[0] = -1;
+                     printf("500 Internal Server Error\n");
+                     send(socket, str, strlen(str), 0);
                   }
                }
                else{
-                  sendErrMsg(socket, 500);
+                  char str[1024];
+                  str[0] = -1;
+                  printf("500 Internal Server Error\n");
+                  send(socket, str , strlen(str), 0)
                }
             }
             else {
