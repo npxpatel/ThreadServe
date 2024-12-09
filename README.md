@@ -4,15 +4,6 @@ This project is implemented using `C` and a Parsing Library.
 
 ---
 
-## **Index**
-
-- [Project Overview](#project-overview)
-- [How to Run](#how-to-run)
-- [Demo](#demo)
-- [Contributing](#contributing)
-
----
-
 ## **Project Overview**
 
 ### **Introduction**
@@ -45,14 +36,6 @@ A multithreaded proxy server capable of handling multiple client requests simult
   - **Access Control**: Restricts access to specific websites.
   - **IP Masking**: Hides the client's IP from the server.
   - **Encryption**: Enhances security by encrypting requests to prevent unauthorized access.
-
----
-
-### **OS Components Used**
-- Threading
-- Semaphores
-- Locks
-- LRU Cache
 
 ---
 
