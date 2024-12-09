@@ -31,11 +31,6 @@ A multithreaded proxy server capable of handling multiple client requests simult
   - Handling multiple client requests concurrently.
   - Locking mechanisms for ensuring thread safety.
   - The concept of caching and its role in browsers.
-- **Use Cases of Proxy Servers**:
-  - **Speed Optimization**: Reduces server traffic and accelerates request handling.
-  - **Access Control**: Restricts access to specific websites.
-  - **IP Masking**: Hides the client's IP from the server.
-  - **Encryption**: Enhances security by encrypting requests to prevent unauthorized access.
 
 ---
 
