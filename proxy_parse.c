@@ -5,10 +5,12 @@
 
 #include "proxy_parse.h"
 #include <stddef.h>
+#include <string.h>
 
 #define DEFAULT_NHDRS 8
 #define MAX_REQ_LEN 65535
 #define MIN_REQ_LEN 4
+
 
 static const char *root_abs_path = "/";
 
@@ -232,7 +234,7 @@ int ParsedHeader_parse(struct ParsedRequest * pr, char * line)
      char * index1;
      char * index2;
 
-     index1 = index(line, ':');
+     index1 = strchr(line, ':');
      if(index1 == NULL)
      {
 	  debug("No colon found\n");

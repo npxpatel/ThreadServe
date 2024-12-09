@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "inet.h": "c"
+        "inet.h": "c",
+        "proxy_parse.h": "c",
+        "stdio.h": "c"
     }
 }
